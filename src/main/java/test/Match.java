@@ -10,6 +10,14 @@ public class Match {
         this.team2 = team2;
     }
 
+    public Team getTeam1() {
+        return team1;
+    }
+
+    public Team getTeam2() {
+        return team2;
+    }
+
     public int getTeam1SkillSum() {
         return team1.getPlayers().stream()
                 .map(Player::getSkill)

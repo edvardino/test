@@ -20,47 +20,25 @@ public class MatchMaker {
     public Optional<Match> pull() {
         Map<Integer, List<Player>> skillToPlayersMapping = groupBySkill();
 
-        List<List<Player>> descSortedPlayers;
-        descSortedPlayers = skillToPlayersMapping.values().stream()
+        List<List<Player>> descSortedPlayers = convertToListWithBiggestGroupsFirst(skillToPlayersMapping);
+
+        Optional<List<Player>> optionalPlayersForMatch = searchPlayersForMatch(descSortedPlayers);
+
+        return optionalPlayersForMatch.flatMap(this::getMatch);
+    }
+
+    private Map<Integer, List<Player>> groupBySkill() {
+        return players.stream().collect(groupingBy(Player::getSkill));
+    }
+
+    private List<List<Player>> convertToListWithBiggestGroupsFirst(Map<Integer, List<Player>> skillToPlayersMapping) {
+        return skillToPlayersMapping.values().stream()
                 .sorted(Comparator.comparing(List::size, Comparator.reverseOrder()))
                 .collect(Collectors.toList());
-
-        Optional<List<Player>> optionalPlayers = searchPlayers(descSortedPlayers);
-
-        return optionalPlayers.flatMap(this::getMatch);
-    }
-
-    private Optional<Match> getMatch(List<Player> players) {
-        players = sortPlayers(players);
-
-        List<Player> teamA = new ArrayList<>(6);
-        List<Player> teamB = new ArrayList<>(6);
-
-        for (int i = 0; i < players.size(); i++) {
-            if (isEven(i)) {
-                teamA.add(players.get(i));
-            } else {
-                teamB.add(players.get(i));
-            }
-        }
-
-        return Optional.of(new Match(new Team(teamA), new Team(teamB)));
-    }
-
-    private List<Player> sortPlayers(List<Player> players) {
-        players = players
-                .stream()
-                .sorted(Comparator.comparing(Player::getSkill))
-                .collect(Collectors.toList());
-        return players;
-    }
-
-    private boolean isEven(int i) {
-        return i % 2 == 0;
     }
 
     // O(n^2) computational complexity
-    private Optional<List<Player>> searchPlayers(List<List<Player>> descSortedPlayersBySkill) {
+    private Optional<List<Player>> searchPlayersForMatch(List<List<Player>> descSortedPlayersBySkill) {
 
         List<Player> result = new ArrayList<>(12);
 
@@ -104,8 +82,25 @@ public class MatchMaker {
         return list;
     }
 
-    private Map<Integer, List<Player>> groupBySkill() {
-        return players.stream().collect(groupingBy(Player::getSkill));
+    private Optional<Match> getMatch(List<Player> players) {
+        players.sort(Comparator.comparing(Player::getSkill));
+
+        List<Player> teamA = new ArrayList<>(Constants.TEAM_SIZE);
+        List<Player> teamB = new ArrayList<>(Constants.TEAM_SIZE);
+
+        for (int i = 0; i < players.size(); i++) {
+            if (isEven(i)) {
+                teamA.add(players.get(i));
+            } else {
+                teamB.add(players.get(i));
+            }
+        }
+
+        return Optional.of(new Match(new Team(teamA), new Team(teamB)));
+    }
+
+    private boolean isEven(int i) {
+        return i % 2 == 0;
     }
 
 }
