@@ -82,6 +82,7 @@ public class MatchMaker {
         return list;
     }
 
+    // need to be reworked, very naive algorithm, that does not work from time to time
     private Optional<Match> getMatch(List<Player> players) {
         players.sort(Comparator.comparing(Player::getSkill));
 
